@@ -1,6 +1,6 @@
 # dash
 team member names:
-Raph
+Raf
 Tanmay
 Dustin
 Javairia
