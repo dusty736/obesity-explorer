@@ -48,12 +48,16 @@ Next, let's download some data from the World Bank. We'll use (sex-disaggregated
 
 ```{r get-wb-data, cache=TRUE}
 # List World Bank indicators
-indicators <- c(rate_pcr.Male     = 'SE.PRM.CMPT.MA.ZS',
-                rate_pcr.Female   = 'SE.PRM.CMPT.FE.ZS',
-                rate_smoke.Male   = "SH.PRV.SMOK.MA",
-                rate_smoke.Female = "SH.PRV.SMOK.FE",
-                pop.Male          = 'SP.POP.TOTL.MA.IN',
-                pop.Female        = 'SP.POP.TOTL.FE.IN')
+indicators <- c(rate_primedu.Male      = 'SE.PRM.CMPT.MA.ZS',
+                rate_primedu.Female    = 'SE.PRM.CMPT.FE.ZS',
+                rate_smoke.Male        = "SH.PRV.SMOK.MA",
+                rate_smoke.Female      = "SH.PRV.SMOK.FE",
+                rate_unemployed.Male   = "SL.UEM.TOTL.MA.ZS",
+                rate_unemployed.Female = "SL.UEM.TOTL.FE.ZS",
+                lifexp.Female          = "SP.DYN.LE00.FE.IN",
+                lifexp.Male            = "SP.DYN.LE00.MA.IN",
+                pop.Male               = 'SP.POP.TOTL.MA.IN',
+                pop.Female             = 'SP.POP.TOTL.FE.IN')
 
 # Download World Bank data
 wb <- WDI(indicator = indicators, extra = TRUE)
@@ -73,7 +77,6 @@ wb_df <- wb %>%
                names_to = "indicator",
                values_to = "rate",
                names_pattern = "_(.*)$") %>%
-  drop_na(rate) %>%
   mutate(across(rate, ~ . / 100),
          count = round(pop * rate)) %>%
   select(-rate) %>%
@@ -87,6 +90,12 @@ combo <- obesity %>%
   select(-rate_obesity)
 ```
 
+```{r write-data, echo=TRUE}
+# write to disk
+write_csv(combo, here::here("data", "obesity-combo.csv"))
+```
+
+
 
 Finally, for convenience, let's create a dataset containing the latest data:
 
@@ -95,6 +104,7 @@ Finally, for convenience, let's create a dataset containing the latest data:
 combo_latest <- combo %>%
   arrange(desc(year)) %>%
   group_by(country, sex) %>%
+  fill(.direction = "up") %>%
   slice(1) %>%
   ungroup
 ```
@@ -103,10 +113,15 @@ Let's try visualizing a few of the relationships. Let's start with looking for a
 
 
 ```{r plot-obesity-smoking, warning=FALSE, message=FALSE}
+rate <- function(numerator, denom) {
+  invalid <- is.na(numerator) | is.na(denom)
+  sum(numerator[!invalid]) / sum(denom[!invalid])
+}
+
 combo_latest %>%
   group_by(region, country) %>%
-  summarise(smoke_rate = sum(smoke) / sum(pop),
-            obesity_rate = sum(obese) / sum(pop)) %>%
+  summarise(smoke_rate = rate(smoke, pop),
+            obesity_rate = rate(obese, pop)) %>%
   ggplot(aes(x = smoke_rate, y = obesity_rate)) +
   geom_point(aes(colour = region)) +
   geom_smooth(method = "lm") +
@@ -121,7 +136,7 @@ Next, let's look at how obesity has changed over time.
 ```{r plot-obesity-ts, warning=FALSE, message=FALSE}
 combo %>%
   group_by(region, year) %>%
-  summarise(obesity_rate = sum(obese, na.rm = TRUE) / sum(pop, na.rm = TRUE)) %>%
+  summarise(obesity_rate = rate(obese, pop)) %>%
   ggplot(aes(x = year, y = obesity_rate, colour = region)) +
   geom_line() +
   labs(title = "Obesity Rates Over Time, by Region",
