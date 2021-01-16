@@ -31,4 +31,4 @@ Lina’ Usage Scenarios and Tasks:
 
 ## Section 4: Sketch of the App
 
-
+[App Sketch](app_sketch.png)
