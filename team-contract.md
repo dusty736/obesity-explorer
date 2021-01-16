@@ -1,8 +1,12 @@
 # Teamwork Contract For MDS 532 - Group 1
 
 ## Description
+
+This document specifies guidelines agreed upon by members of Group 1 of the University of British Columbia Master of Data Science program to ensure an effective and efficient working environment for the DSCI 532 group project. As well as agreeing to the UBC MDS policies outlined here: https://ubc-mds.github.io/policies/ the contract details logistics on how our group will work together, resolve issues, and expectations for individual tasks and overall project, to ensure a high quality experience and final project. Members included are:
+
 This document specifies guidelines agreed upon by members of Group 1 of the University of British Columbia Master of Data Science program to ensure an effective and efficient working environment for the DSCI 532 group project.
 As well as agreeing to the UBC MDS policies outlined here: https://ubc-mds.github.io/policies/ the contract details logistics on how our group will work together, resolve issues, and expectations for individual tasks and overall project, to ensure a high quality experience and final project. Members included are:
+
 
 * Tanmay Sharma
 * Javairia Raza
@@ -33,4 +37,9 @@ The team will treat one another with respect and be open to other people's opini
 
 ## Dealing With Conflict 
 
-Any conflict will be dealt with through open and honest communication. A democracy style conflict management system will be used to make major decisions for this project. Constructive critcism with alternatives may be provided to any team member. If there are serious concerns, the issue may be escalated to the teaching staff. 
+
+Any conflict will be dealt with through open and honest communication. A democracy style conflict management system will be used to make major decisions for this project. Constructive critcism with alternatives may be provided to any team member. If there are serious concerns, the issue may be escalated to the teaching staff.
+
+## References
+
+Wong, R. (2020). Teamwork Contract For MDS 522 - Group 29. Accessed on January 16, 2021 from https://github.com/jraza19/group29-javairia/blob/main/Teamwork_Contract.md.
