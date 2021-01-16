@@ -14,6 +14,8 @@ We are a data science consultancy firm that specializes in global health and beh
 
 ## Section 2: Description of the data
 
+The dataset we will be working with is related to potential factors associated with obesity for countries all around the world from 1975 to 2016. We have combined the (WHO obesity data)[https://www.who.int/data/gho/data/indicators/indicator-details/GHO/prevalence-of-obesity-among-adults-bmi-=-30-(age-standardized-estimate)-(-)] for each country with (World Bank indicators)[https://data.worldbank.org/indicator] data on income status, GDP, life expectancy, unemployment rate, debt risk and primary education completion percent by each year. We derived counts for these indicators by converting the rates and percents using population counts. Our final dataset has around 13,000 rows and all variables are stratified by year, country and sex. This will allow us to filter and aggregate data based on these different variables to determine differences in health outcomes and the associated risk factors for each. Overall, we are hoping to provide a more comprehensive picture on the patterns, high risk groups and trends on obesity and review the differences and similarities and differences between countries across time. We have also included longitude, latitude and capital of all countries to be able to visualize a map. From this dataset, we will derive rates of different factors (primary_ed_rate, obesity_rate, unemployment_rate) as well as ratios to compare differences across sex. Please see our initial EDA in our repository. 
+
 ## Section 3: Research questions and usage scenarios
 
 **PERSONA: LINA**
@@ -32,3 +34,8 @@ Lina’ Usage Scenarios and Tasks:
 ## Section 4: Sketch of the App
 
 
+## References
+
+The World Bank (n.d.). Indicators. https://data.worldbank.org/indicator. Retrieved January 16, 2021, from https://data.worldbank.org/indicator
+
+World Health Organization(WHO) (n.d.). Prevalence of obesity among adults, BMI = 30 (age-standardized estimate) (%). Retrieved January 16, 2021, from https://www.who.int/data/gho/data/indicators/indicator-details/GHO/prevalence-of-obesity-among-adults-bmi-=-30-(age-standardized-estimate)-(-)
