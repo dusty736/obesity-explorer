@@ -1,0 +1,149 @@
+---
+title: "EDA of Obesity Data"
+author: "Rafael Pilliard Hellwig"
+date: "12/01/2021"
+output: 
+  html_document:
+    self_contained: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+```
+
+```{r load-pkg, warning=FALSE, message=FALSE}
+# Load packages
+library(tidyverse)
+library(WDI)
+
+# silence dplyr summarise warnings
+options(dplyr.summarise.inform = FALSE)
+```
+
+
+Let's start by reading-in the obesity data (using the pre-cleaned `data/obesity-cleaned.csv` file).
+
+```{r read-obesity-cleaned}
+# Read-in and tidy obesity data
+file <- here::here("data", "obesity-cleaned.csv")
+colspec <- cols(
+  X1 = col_skip(),
+  Country = col_character(),
+  Year = col_double(),
+  `Obesity (%)` = col_character(),
+  Sex = col_character()
+)
+obesity <- read_csv(file, col_types = colspec) %>%
+  janitor::clean_names() %>%
+  filter(sex != "Both sexes") %>%
+  filter(obesity_percent != "No data") %>%
+  mutate(rate_obesity = as.numeric(str_extract(obesity_percent, "^\\d+\\.\\d")) / 100) %>%
+  select(-obesity_percent)
+```
+
+
+Next, let's download some data from the World Bank. We'll use (sex-disaggregated) indicators on percentage completion of basic education, smoking rates, and population.
+
+```{r get-wb-data, cache=TRUE}
+# List World Bank indicators
+indicators <- c(rate_primedu.Male      = 'SE.PRM.CMPT.MA.ZS',
+                rate_primedu.Female    = 'SE.PRM.CMPT.FE.ZS',
+                rate_smoke.Male        = "SH.PRV.SMOK.MA",
+                rate_smoke.Female      = "SH.PRV.SMOK.FE",
+                rate_unemployed.Male   = "SL.UEM.TOTL.MA.ZS",
+                rate_unemployed.Female = "SL.UEM.TOTL.FE.ZS",
+                lifexp.Female          = "SP.DYN.LE00.FE.IN",
+                lifexp.Male            = "SP.DYN.LE00.MA.IN",
+                pop.Male               = 'SP.POP.TOTL.MA.IN',
+                pop.Female             = 'SP.POP.TOTL.FE.IN')
+
+# Download World Bank data
+wb <- WDI(indicator = indicators, extra = TRUE)
+```
+
+Next, we combine both datasets and ensure that all variables are converted to counts. This ensures that each row is a proper stratum that can be aggregated any way.
+
+
+```{r reshape-wb}
+# Reshape world bank values to counts
+wb_df <- wb %>%
+  as_tibble %>%
+  pivot_longer(contains("."), names_to = c("indicator", "sex"),
+               names_pattern = "(.*)\\.(.*)") %>%
+  pivot_wider(names_from = indicator, values_from =  value) %>%
+  pivot_longer(starts_with("rate_"), 
+               names_to = "indicator",
+               values_to = "rate",
+               names_pattern = "_(.*)$") %>%
+  mutate(across(rate, ~ . / 100),
+         count = round(pop * rate)) %>%
+  select(-rate) %>%
+  pivot_wider(names_from = indicator, values_from = count)
+
+# Combine data
+combo <- obesity %>%
+  left_join(wb_df, by = c("country", "year", "sex")) %>%
+  mutate(obese = rate_obesity * pop) %>%
+  drop_na(pop) %>%
+  select(-rate_obesity)
+```
+
+```{r write-data, echo=TRUE}
+# write to disk
+write_csv(combo, here::here("data", "obesity-combo.csv"))
+```
+
+
+
+Finally, for convenience, let's create a dataset containing the latest data:
+
+```{r create-combo-latest}
+# create a version that only contains the latest year
+combo_latest <- combo %>%
+  arrange(desc(year)) %>%
+  group_by(country, sex) %>%
+  fill(.direction = "up") %>%
+  slice(1) %>%
+  ungroup
+```
+
+Let's try visualizing a few of the relationships. Let's start with looking for an association between smoking and obesity:
+
+
+```{r plot-obesity-smoking, warning=FALSE, message=FALSE}
+rate <- function(numerator, denom) {
+  invalid <- is.na(numerator) | is.na(denom)
+  sum(numerator[!invalid]) / sum(denom[!invalid])
+}
+
+combo_latest %>%
+  group_by(region, country) %>%
+  summarise(smoke_rate = rate(smoke, pop),
+            obesity_rate = rate(obese, pop)) %>%
+  ggplot(aes(x = smoke_rate, y = obesity_rate)) +
+  geom_point(aes(colour = region)) +
+  geom_smooth(method = "lm") +
+  labs(title = "Positive Relationship Between Smoking and Obesity",
+       x = "Rate of Smoking",
+       y = "Rate of Obesity",
+       colour = "Region")
+```
+
+Next, let's look at how obesity has changed over time.
+
+```{r plot-obesity-ts, warning=FALSE, message=FALSE}
+combo %>%
+  group_by(region, year) %>%
+  summarise(obesity_rate = rate(obese, pop)) %>%
+  ggplot(aes(x = year, y = obesity_rate, colour = region)) +
+  geom_line() +
+  labs(title = "Obesity Rates Over Time, by Region",
+       x = "Year",
+       y = "Rate of Obesity",
+       colour = "Region")
+```
+
+A few of the values are a bit erratic. That's something to look into later.
+
