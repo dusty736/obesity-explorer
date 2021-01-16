@@ -1,6 +1,6 @@
 # Obesity Explorer
-==================
-Dustin Burnham, Javairia Raza, Rafael Pilliard Hellwig, Tanmay Sharma
+
+Group 1: Dustin Burnham, Javairia Raza, Rafael Pilliard Hellwig, Tanmay Sharma
 
 # About
 
