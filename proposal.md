@@ -16,6 +16,19 @@ We are a data science consultancy firm that specializes in global health and beh
 
 ## Section 3: Research questions and usage scenarios
 
+**PERSONA: LINA**
+Lina is a graduate student enrolled in her first semester for a Masters in Global Health Management. She needs to come up with a research proposal for her course GHM 504: Introduction to Nutrition for Global Health. She is interested in exploring whether obesity truly is a ‘rich country problem,’ or whether obesity also plagues developing countries. Having grown up in a part of America with high poverty, her own experience informs her that poor neighbourhoods actually have high rates of obesity. She wants to know if poorer countries also may be dealing with this issue.
+ 
+Research questions / Lina’s motivation:
+1. 	Which countries / regions have the highest rates of obesity?
+2. 	How have obesity trends changed over time? Which countries and regions have had the largest increases over time?
+3. 	Is obesity correlated with measures of wealth (e.g. GDP per capita)?
+4. 	Are there factors that help explain the obesity trends?
+ 
+Lina’ Usage Scenarios and Tasks:
+- [explore] different international development metrics to [identify] which ones help explain obesity rates in different countries.
+- [correlate] obesity data with measure of wealth.
+
 ## Section 4: Sketch of the App
 
 
