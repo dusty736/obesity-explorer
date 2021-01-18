@@ -27,7 +27,7 @@ Let's start by reading-in the obesity data (using the pre-cleaned `data/obesity-
 
 ```{r read-obesity-cleaned}
 # Read-in and tidy obesity data
-file <- here::here("data", "obesity-cleaned.csv")
+file <- here::here("data", "raw", "obesity-cleaned.csv")
 colspec <- cols(
   X1 = col_skip(),
   Country = col_character(),
@@ -92,7 +92,7 @@ combo <- obesity %>%
 
 ```{r write-data, echo=TRUE}
 # write to disk
-write_csv(combo, here::here("data", "obesity-combo.csv"))
+write_csv(combo, here::here("data", "processed", "obesity-combo.csv"))
 ```
 
 
