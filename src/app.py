@@ -25,6 +25,10 @@ app.layout = html.Div(
             id="bar",
             style={"border-width": "0", "width": "100%", "height": "500px"},
         ),
+        html.Iframe(
+            id="time",
+            style={"border-width": "0", "width": "100%", "height": "500px"},
+        ),
         dcc.Slider(
             id="input_year",
             value=2016,
@@ -101,8 +105,110 @@ def plot_map():
     pass
 
 
-def plot_time():
-    pass
+@app.callback(
+    Output("time", "srcDoc"),
+    Input("input_year_range", "value"),
+    Input("input_sex", "value"),
+    Input("input_highlight_country", "value"),
+)
+def plot_time(input_year_range, input_sex, input_highlight_country):
+    # Create list of desired years
+    year_range = list(range(input_year_range[0], input_year_range[1] + 1))
+
+    # Aggregate for sex and year
+    if len(input_sex) == 1:
+        filter = ob["year"].isin(year_range) & ob["sex"].isin(input_sex)
+        ob_yr = ob.loc[filter, :]
+        ob_yr.loc[:, "obese_rate"] = ob_yr["obese"] / ob_yr["pop"]
+    elif len(input_sex) == 2:
+        ob_yr = ob.loc[ob["year"].isin(year_range), :]
+        ob_yr = ob_yr.groupby(["country", "year"])[["obese", "pop"]].sum().reset_index()
+        ob_yr.loc[:, "obese_rate"] = ob_yr["obese"] / ob_yr["pop"]
+    else:
+        pass
+
+    # Create regional trends
+    ob_region = (
+        ob.groupby(
+            ["region", "year"],
+        )[["obese", "pop"]]
+        .sum()
+        .reset_index()
+    )
+    ob_region["obese_rate"] = ob_region["obese"] / ob_region["pop"]
+
+    ob_world = (
+        ob.groupby(
+            ["year"],
+        )[["obese", "pop"]]
+        .sum()
+        .reset_index()
+    )
+    ob_world["obese_rate"] = ob_world["obese"] / ob_world["pop"]
+    ob_world["region"] = "World"
+
+    ob_combined = ob_region.append(ob_world)
+
+    # Create Labels
+    title_label = input_highlight_country + " and Obesity"
+    sub_label = str(input_year_range[0]) + "-" + str(input_year_range[1])
+
+    # Add click object
+    click = alt.selection_multi()
+
+    # Create Plot
+    country_time_chart = (
+        alt.Chart(ob_yr, title=alt.TitleParams(text=title_label, subtitle=sub_label))
+        .mark_line(point=True)
+        .encode(
+            x=alt.X(
+                "year:O",
+                scale=alt.Scale(zero=False),
+                title="Years",
+                axis=alt.Axis(grid=False),
+            ),
+            y=alt.Y("obese_rate:Q", title="Obesity Rate"),
+            color=alt.condition(
+                # (alt.datum.country == input_highlight_country),
+                click,
+                "country",
+                alt.value("lightgray"),
+                legend=None,
+            ),
+            opacity=alt.condition(
+                alt.datum.country == input_highlight_country,
+                alt.value(1),
+                alt.value(0.1),
+            ),
+            tooltip="country",
+        )
+        .interactive()
+        .add_selection(click)
+    )
+
+    print(ob_combined.head())
+
+    world_time_chart = (
+        alt.Chart(ob_combined)
+        .mark_line(opacity=0.3)
+        .encode(
+            x=alt.X(
+                "year:O",
+                scale=alt.Scale(zero=False),
+                title="Years",
+                axis=alt.Axis(grid=False),
+            ),
+            y=alt.Y("obese_rate", title="Obesity Rate"),
+            color="region",
+            opacity=alt.condition(
+                alt.datum.region == "World", alt.value(1), alt.value(0.4)
+            ),
+            tooltip="region",
+        )
+        .interactive()
+    )
+
+    return (country_time_chart + world_time_chart).to_html()
 
 
 def plot_factor():
