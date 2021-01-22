@@ -27,14 +27,13 @@ server = app.server
     Input("input_sex", "value"),
 )
 def gen_query_string(year, sex):
+    filters = {
+        "sex": he.sex_selection(sex),
+        "year": [year],
+    }
 
-    return (
-        "Hello world. The year is "
-        + str(year)
-        + " and the sex is ("
-        + ", ".join(he.sex_selection(sex))
-        + ")"
-    )
+    query = " & ".join(["{} in {}".format(k, v) for k, v in filters.items()])
+    return query
 
 
 app.layout = html.Div(
@@ -91,15 +90,16 @@ app.layout = html.Div(
                 i: "{}".format(i) if i == 1 else str(i) for i in range(1975, 2017, 5)
             },
         ),
-        html.P("abc", id="teststring"),
+        html.P(id="teststring"),
     ]
 )
 
 
 # Bar plot
-@app.callback(Output("bar", "srcDoc"), Input("input_year", "value"))
-def plot_bar(year=0, n=20):
-    temp = he.make_rate_data(["country"], ["obese"], f"year == {year}")
+@app.callback(Output("bar", "srcDoc"), Input("teststring", "children"))
+def plot_bar(q):
+    n = 20
+    temp = he.make_rate_data(["country"], ["obese"], q)
     ob_sorted = temp.sort_values("obese", ascending=False).head(n).reset_index()
     chart = (
         alt.Chart(ob_sorted)
