@@ -20,6 +20,13 @@ app = dash.Dash(__name__)
 
 server = app.server
 
+
+@app.callback(Output("teststring", "children"), Input("input_year", "value"))
+def gen_query_string(year):
+
+    return "Hello world. The year is " + str(year)
+
+
 app.layout = html.Div(
     [
         html.H1("Top Countries"),
@@ -72,6 +79,7 @@ app.layout = html.Div(
                 i: "{}".format(i) if i == 1 else str(i) for i in range(1975, 2017, 5)
             },
         ),
+        html.P("abc", id="teststring"),
     ]
 )
 
