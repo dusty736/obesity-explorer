@@ -49,7 +49,7 @@ app.layout = html.Div(
             multi=True,
             options=[
                 {"label": region, "value": region}
-                for region in list(ob["region"].unique())
+                for region in list(ob["region"].dropna().unique())
             ],
         ),
         dcc.Dropdown(
