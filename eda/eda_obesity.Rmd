@@ -65,6 +65,19 @@ wb <- WDI(indicator = indicators, extra = TRUE)
 
 Next, we combine both datasets and ensure that all variables are converted to counts. This ensures that each row is a proper stratum that can be aggregated any way.
 
+```{r}
+# Read-in a dictionary of mappings for country names
+cydict <- read_csv(here::here("data", "country-ids.csv")) %>%
+  mutate(pref = coalesce(world_bank, obesity, altair))
+
+# Helper function to relabel country names
+fix_cy <- function(x, old) {
+  mask <- !is.na(old)
+  plyr::mapvalues(x, old[mask], cydict$pref[mask], FALSE)
+}
+```
+
+
 
 ```{r reshape-wb}
 # Reshape world bank values to counts
@@ -80,14 +93,17 @@ wb_df <- wb %>%
   mutate(across(rate, ~ . / 100),
          count = round(pop * rate)) %>%
   select(-rate) %>%
-  pivot_wider(names_from = indicator, values_from = count)
+  pivot_wider(names_from = indicator, values_from = count) %>%
+  mutate(across(country, fix_cy, old = cydict$world_bank))
 
 # Combine data
 combo <- obesity %>%
-  left_join(wb_df, by = c("country", "year", "sex")) %>%
+  mutate(across(country, fix_cy, old = cydict$obesity)) %>%
+  full_join(wb_df, by = c("country", "year", "sex")) %>%
   mutate(obese = rate_obesity * pop) %>%
   drop_na(pop) %>%
-  select(-rate_obesity)
+  select(-rate_obesity) %>%
+  mutate(none = "All")
 ```
 
 ```{r write-data, echo=TRUE}
@@ -104,7 +120,7 @@ Finally, for convenience, let's create a dataset containing the latest data:
 combo_latest <- combo %>%
   arrange(desc(year)) %>%
   group_by(country, sex) %>%
-  fill(.direction = "up") %>%
+  fill(where(is.numeric), .direction = "up") %>%
   slice(1) %>%
   ungroup
 ```
