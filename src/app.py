@@ -79,7 +79,6 @@ app.layout = html.Div(
 # Bar plot
 @app.callback(Output("bar", "srcDoc"), Input("input_year", "value"))
 def plot_bar(year=0, n=20):
-    # ob_yr = ob.loc[ob["year"] == year, :]
     temp = he.make_rate_data(["country"], ["obese"], f"year == {year}")
     ob_sorted = temp.sort_values("obese", ascending=False).head(n).reset_index()
     chart = (
