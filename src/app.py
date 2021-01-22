@@ -23,20 +23,23 @@ server = app.server
 
 
 @app.callback(
-    Output("teststring", "children"),
+    Output("qs_ts", "children"),
+    Input("input_year_range", "value"),
+    Input("input_sex", "value"),
+    Input("input_region", "value"),
+)
+def gen_qs_ts(year, sex, region):
+    return he.gen_query_string(year, sex, region)
+
+
+@app.callback(
+    Output("qs_bar", "children"),
     Input("input_year", "value"),
     Input("input_sex", "value"),
     Input("input_region", "value"),
 )
-def gen_query_string(year, sex, region):
-    filters = {
-        "sex": he.sex_selection(sex),
-        "year": [year],
-        "region": region,
-    }
-
-    query = " & ".join(["{} in {}".format(k, v) for k, v in filters.items()])
-    return query
+def gen_qs_bar(year, sex, region):
+    return he.gen_query_string(year, sex, region)
 
 
 app.layout = html.Div(
@@ -93,13 +96,14 @@ app.layout = html.Div(
                 i: "{}".format(i) if i == 1 else str(i) for i in range(1975, 2017, 5)
             },
         ),
-        html.P(id="teststring"),
+        html.P(id="qs_bar"),
+        html.P(id="qs_ts"),
     ]
 )
 
 
 # Bar plot
-@app.callback(Output("bar", "srcDoc"), Input("teststring", "children"))
+@app.callback(Output("bar", "srcDoc"), Input("qs_bar", "children"))
 def plot_bar(query_string):
     n = 20
     temp = he.make_rate_data(["country"], ["obese"], query_string)
