@@ -14,6 +14,7 @@ alt.data_transformers.disable_max_rows()
 # read-in obesity data
 file = "data/processed/obesity-combo.csv"
 ob = pd.read_csv(file)
+ob = ob[ob["region"] != "Aggregates"]
 
 # Instantiate the app
 app = dash.Dash(__name__)
@@ -25,11 +26,13 @@ server = app.server
     Output("teststring", "children"),
     Input("input_year", "value"),
     Input("input_sex", "value"),
+    Input("input_region", "value"),
 )
-def gen_query_string(year, sex):
+def gen_query_string(year, sex, region):
     filters = {
         "sex": he.sex_selection(sex),
         "year": [year],
+        "region": region,
     }
 
     query = " & ".join(["{} in {}".format(k, v) for k, v in filters.items()])
@@ -63,7 +66,7 @@ app.layout = html.Div(
         ),
         dcc.Dropdown(
             id="input_region",
-            value=list(ob["region"].unique()),
+            value=list(ob["region"].dropna().unique()),
             multi=True,
             options=[
                 {"label": region, "value": region}
@@ -97,9 +100,9 @@ app.layout = html.Div(
 
 # Bar plot
 @app.callback(Output("bar", "srcDoc"), Input("teststring", "children"))
-def plot_bar(q):
+def plot_bar(query_string):
     n = 20
-    temp = he.make_rate_data(["country"], ["obese"], q)
+    temp = he.make_rate_data(["country"], ["obese"], query_string)
     ob_sorted = temp.sort_values("obese", ascending=False).head(n).reset_index()
     chart = (
         alt.Chart(ob_sorted)
