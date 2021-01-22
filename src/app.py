@@ -27,9 +27,10 @@ server = app.server
     Input("input_year_range", "value"),
     Input("input_sex", "value"),
     Input("input_region", "value"),
+    Input("input_income", "value"),
 )
-def gen_qs_ts(year, sex, region):
-    return he.gen_query_string(year, sex, region)
+def gen_qs_ts(year, sex, region, income):
+    return he.gen_query_string(year, sex, region, income)
 
 
 @app.callback(
@@ -37,9 +38,10 @@ def gen_qs_ts(year, sex, region):
     Input("input_year", "value"),
     Input("input_sex", "value"),
     Input("input_region", "value"),
+    Input("input_income", "value"),
 )
-def gen_qs_bar(year, sex, region):
-    return he.gen_query_string(year, sex, region)
+def gen_qs_bar(year, sex, region, income):
+    return he.gen_query_string(year, sex, region, income)
 
 
 app.layout = html.Div(
@@ -74,6 +76,25 @@ app.layout = html.Div(
             options=[
                 {"label": region, "value": region}
                 for region in list(ob["region"].dropna().unique())
+            ],
+        ),
+        dcc.Dropdown(
+            id="input_regressor",
+            value="smoke",
+            multi=False,
+            options=[
+                {"label": "Smoking Rate", "value": "smoke"},
+                {"label": "Primary Education Completion Rate", "value": "primedu"},
+                {"label": "Unemployment Rate", "value": "unemployed"},
+            ],
+        ),
+        dcc.Dropdown(
+            id="input_income",
+            value=list(ob["income"].dropna().unique()),
+            multi=True,
+            options=[
+                {"label": income, "value": income}
+                for income in list(ob["income"].dropna().unique())
             ],
         ),
         dcc.Dropdown(

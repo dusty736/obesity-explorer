@@ -50,13 +50,14 @@ def make_rate_data(grp, valuevars, query="none == 'All'", data=ob):
     return ratedata
 
 
-def gen_query_string(year, sex, region):
+def gen_query_string(year, sex, region, income):
     """Generates A Query String For Filtering
 
     Args:
         year ([list, int]): A two element containing the start and the end of a year range or a single integer indicating a year
         sex ([str]): One of 'Female', 'Male' or 'Both'
         region ([list]): A list of all the regions of the world to filter by
+        income ([list]): A list of all the income groups to filter by
 
     Returns:
         [str]: A query string to be passed into a pandas query
@@ -66,6 +67,7 @@ def gen_query_string(year, sex, region):
         "sex": sex_selection(sex),
         "year": list(range(year[0], year[1] + 1)) if type(year) == list else [year],
         "region": region,
+        "income": income,
     }
 
     query = " & ".join(["{} in {}".format(k, v) for k, v in filters.items()])
