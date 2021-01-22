@@ -7,6 +7,7 @@ import altair as alt
 import numpy as np
 import pandas as pd
 import helper as he
+from vega_datasets import data
 
 # disable Altair limits
 alt.data_transformers.disable_max_rows()
@@ -15,6 +16,13 @@ alt.data_transformers.disable_max_rows()
 file = "data/processed/obesity-combo.csv"
 ob = pd.read_csv(file)
 ob = ob[ob["region"] != "Aggregates"]
+
+
+# read-in the countries taxonomy
+cy_ids = pd.read_csv("data/country-ids.csv").rename(columns={"world_bank": "country"})
+
+# load the geojson data
+geojson = alt.topo_feature(data.world_110m.url, "countries")
 
 # Instantiate the app
 app = dash.Dash(__name__)
@@ -49,6 +57,11 @@ app.layout = html.Div(
         html.H1("Top Countries"),
         html.Iframe(
             id="bar",
+            srcDoc=None,
+            style={"border-width": "0", "width": "100%", "height": "500px"},
+        ),
+        html.Iframe(
+            id="plt_map",
             srcDoc=None,
             style={"border-width": "0", "width": "100%", "height": "500px"},
         ),
@@ -143,8 +156,35 @@ def plot_bar(query_string):
     return chart.to_html()
 
 
-def plot_map():
-    pass
+@app.callback(Output("plt_map", "srcDoc"), Input("qs_bar", "children"))
+def plot_map(query_string):
+    df = (
+        he.make_rate_data(["country"], ["obese"], query_string)
+        .merge(cy_ids, "right", on="country")
+        .sort_values("obese", ascending=False)
+    )
+    world = (
+        (
+            alt.Chart(geojson)
+            .mark_geoshape()
+            .transform_lookup(
+                lookup="id",
+                from_=alt.LookupData(df, "id", ["country", "obese"]),
+            )
+            .encode(
+                color=alt.Color("obese:Q", scale=alt.Scale(scheme="viridis")),
+                # opacity=alt.condition(map_click, alt.value(1), alt.value(0.2)),
+                stroke=alt.value("black"),
+                tooltip=[
+                    alt.Tooltip("country:N", title="Country"),
+                    alt.Tooltip("obese:Q", format=".1%", title="Obesity Rate"),
+                ],
+            )
+        )
+        .project("naturalEarth1")
+        .properties(width=900, height=600)
+    )
+    return world.to_html()
 
 
 def plot_time():
