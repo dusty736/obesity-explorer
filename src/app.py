@@ -21,10 +21,20 @@ app = dash.Dash(__name__)
 server = app.server
 
 
-@app.callback(Output("teststring", "children"), Input("input_year", "value"))
-def gen_query_string(year):
+@app.callback(
+    Output("teststring", "children"),
+    Input("input_year", "value"),
+    Input("input_sex", "value"),
+)
+def gen_query_string(year, sex):
 
-    return "Hello world. The year is " + str(year)
+    return (
+        "Hello world. The year is "
+        + str(year)
+        + " and the sex is ("
+        + ", ".join(he.sex_selection(sex))
+        + ")"
+    )
 
 
 app.layout = html.Div(
@@ -44,10 +54,12 @@ app.layout = html.Div(
             included=False,
             marks={i: f"{str(i)}" for i in range(1975, 2017, 5)},
         ),
-        dcc.Checklist(
+        dcc.RadioItems(
             id="input_sex",
-            options=[{"label": sex, "value": sex} for sex in ["Male", "Female"]],
-            value=["Male", "Female"],
+            options=[
+                {"label": sex, "value": sex} for sex in ["Male", "Female", "Both"]
+            ],
+            value="Both",
             labelStyle={"display": "inline-block"},
         ),
         dcc.Dropdown(
