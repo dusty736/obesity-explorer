@@ -17,6 +17,3 @@ def rate(x, y):
     """
     condition = x.isna() | y.isna()
     return sum(x.loc[~condition]) / sum(y.loc[~condition])
-
-
-rate(pd.Series([1, 2]), pd.Series([1, 2]))

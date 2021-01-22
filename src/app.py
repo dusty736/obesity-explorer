@@ -6,7 +6,7 @@ from dash.dependencies import Input, Output
 import altair as alt
 import numpy as np
 import pandas as pd
-from src.helper import rate
+import helper as he
 
 # disable Altair limits
 alt.data_transformers.disable_max_rows()
@@ -19,26 +19,6 @@ ob = pd.read_csv(file)
 app = dash.Dash(__name__)
 
 server = app.server
-
-
-# def plot_bar(year=0, n=20):
-#     ob_yr = ob.loc[ob["year"] == 2016, :]
-#     temp = ob_yr.groupby("country")[["obese", "pop"]].sum()
-#     temp["ob_rate"] = temp["obese"] / temp["pop"]
-#     ob_sorted = temp.sort_values("ob_rate", ascending=False).head(n).reset_index()
-#     chart = (
-#         alt.Chart(ob_sorted)
-#         .mark_bar()
-#         .encode(
-#             x=alt.X("ob_rate", type="quantitative", title="Obesity Rate"),
-#             y=alt.Y("country", sort="x", title="Country"),
-#             color="ob_rate",
-#             tooltip="ob_rate",
-#         )
-#         .interactive()
-#     )
-#     return chart.to_html()
-
 
 app.layout = html.Div(
     [
