@@ -35,7 +35,7 @@ app.layout = html.Div(
             max=2016,
             step=5,
             included=False,
-            marks={i: f"Label {str(i)}" for i in range(1975, 2017)},
+            marks={i: f"{str(i)}" for i in range(1975, 2017, 5)},
         ),
         dcc.Checklist(
             id="input_sex",
@@ -69,8 +69,7 @@ app.layout = html.Div(
             max=2016,
             step=1,
             marks={
-                i: "Label {}".format(i) if i == 1 else str(i)
-                for i in range(1975, 2017, 5)
+                i: "{}".format(i) if i == 1 else str(i) for i in range(1975, 2017, 5)
             },
         ),
     ]
@@ -80,18 +79,17 @@ app.layout = html.Div(
 # Bar plot
 @app.callback(Output("bar", "srcDoc"), Input("input_year", "value"))
 def plot_bar(year=0, n=20):
-    ob_yr = ob.loc[ob["year"] == year, :]
-    temp = ob_yr.groupby("country")[["obese", "pop"]].sum()
-    temp["ob_rate"] = temp["obese"] / temp["pop"]
-    ob_sorted = temp.sort_values("ob_rate", ascending=False).head(n).reset_index()
+    # ob_yr = ob.loc[ob["year"] == year, :]
+    temp = he.make_rate_data(["country"], ["obese"], f"year == {year}")
+    ob_sorted = temp.sort_values("obese", ascending=False).head(n).reset_index()
     chart = (
         alt.Chart(ob_sorted)
         .mark_bar()
         .encode(
-            x=alt.X("ob_rate", type="quantitative", title="Obesity Rate"),
+            x=alt.X("obese", type="quantitative", title="Obesity Rate"),
             y=alt.Y("country", sort="x", title="Country"),
-            color="ob_rate",
-            tooltip="ob_rate",
+            color="obese",
+            tooltip="obese",
         )
         .interactive()
     )
