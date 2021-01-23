@@ -44,7 +44,7 @@ app.layout = dbc.Container(
                 dbc.Col(
                     [
                         html.Br(),
-                        html.Label("Select Sex: "),
+                        html.Label("Filter Sex: "),
                         dcc.RadioItems(
                             id="input_sex",
                             options=[
@@ -57,7 +57,7 @@ app.layout = dbc.Container(
                             inputStyle={"margin-left": "20px"},
                         ),
                         html.Br(),
-                        html.Label("Select Year: "),
+                        html.Label("Filter Year: "),
                         dcc.Slider(
                             id="input_year",
                             value=2016,
@@ -70,7 +70,7 @@ app.layout = dbc.Container(
                         html.Br(),
                         html.Label(
                             [
-                                "Select Region:",
+                                "Filter Region:",
                                 dcc.Dropdown(
                                     id="input_region",
                                     value=list(ob["region"].dropna().unique()),
@@ -87,7 +87,7 @@ app.layout = dbc.Container(
                             ]
                         ),
                         html.Br(),
-                        html.Label("Choose Income Group: "),
+                        html.Label("Filter Income Group: "),
                         dcc.Dropdown(
                             id="input_income",
                             value=list(ob["income"].dropna().unique()),
@@ -189,7 +189,9 @@ app.layout = dbc.Container(
 # Bar plot
 def plot_bar(query_string, year):
 
-    title_label = "Top 20 Countries"
+    n = 10
+
+    title_label = "Top " + str(n) + " Countries"
     sub_label = str(year)
 
     n = 10
@@ -274,11 +276,14 @@ def plot_time(query_string, highlight_country, year_range):
         [highlight_country] if type(highlight_country) == str else highlight_country
     )
 
-    # Create chart
-    alt.renderers.set_embed_options(
-        padding={"left": 0, "right": 0, "bottom": 0, "top": 0}
-    )
+    # Get data for highlighted countries
+    highlighted_data = ob_yr[ob_yr["country"].isin(highlight_country)]
+    highlighted_data.loc[:, "highlighted"] = [
+        country if country in highlight_country else "other"
+        for country in highlighted_data["country"]
+    ]
 
+    # Create chart
     country_time_chart = (
         alt.Chart(ob_yr, title=alt.TitleParams(text=title_label, subtitle=sub_label))
         .mark_line()
@@ -300,7 +305,7 @@ def plot_time(query_string, highlight_country, year_range):
                 ),
                 "country",
                 alt.value("lightgray"),
-                legend=None,
+                # legend=None,
             ),
             opacity=alt.condition(
                 alt.Predicate(
@@ -315,7 +320,31 @@ def plot_time(query_string, highlight_country, year_range):
         .interactive()
     )
 
-    return country_time_chart
+    highlighted_time_chart = (
+        alt.Chart(highlighted_data)
+        .mark_line()
+        .encode(
+            x=alt.X(
+                "year:O",
+                scale=alt.Scale(zero=False),
+                title="Years",
+                axis=alt.Axis(grid=False),
+            ),
+            y=alt.Y(
+                "obese:Q",
+                title="Obesity Rate",
+                axis=alt.Axis(format="%"),
+            ),
+            color=alt.Color(
+                "highlighted",
+                legend=alt.Legend(title="Countries", values=highlight_country),
+            ),
+            tooltip="country",
+        )
+    )
+
+    # return country_time_chart
+    return country_time_chart + highlighted_time_chart
 
 
 # Scatter plot
