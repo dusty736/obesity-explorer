@@ -31,111 +31,10 @@ app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 server = app.server
 
-
-# @app.callback(
-#     Output("qs_ts", "children"),
-#     Input("input_year_range", "value"),
-#     Input("input_sex", "value"),
-#     Input("input_region", "value"),
-#     Input("input_income", "value"),
-# )
-# def gen_qs_ts(year, sex, region, income):
-#     return he.gen_query_string(year, sex, region, income)
-
-
-# @app.callback(
-#     Output("qs_bar", "children"),
-#     Input("input_year", "value"),
-#     Input("input_sex", "value"),
-#     Input("input_region", "value"),
-#     Input("input_income", "value"),
-# )
-# def gen_qs_bar(year, sex, region, income):
-#     return he.gen_query_string(year, sex, region, income)
-
-
-# app.layout = html.Div(
-#     [
-#         html.H1("Top Countries"),
-#         html.Iframe(
-#             id="bar",
-#             srcDoc=None,
-#             style={"border-width": "0", "width": "100%", "height": "500px"},
-#         ),
-#         html.Iframe(
-#             id="plt_map",
-#             srcDoc=None,
-#             style={"border-width": "0", "width": "100%", "height": "500px"},
-#         ),
-#         dcc.Slider(
-#             id="input_year",
-#             value=2016,
-#             min=1975,
-#             max=2016,
-#             step=5,
-#             included=False,
-#             marks={i: f"{str(i)}" for i in range(1975, 2017, 5)},
-#         ),
-#         dcc.RadioItems(
-#             id="input_sex",
-#             options=[
-#                 {"label": sex, "value": sex} for sex in ["Male", "Female", "Both"]
-#             ],
-#             value="Both",
-#             labelStyle={"display": "inline-block"},
-#         ),
-#         dcc.Dropdown(
-#             id="input_region",
-#             value=list(ob["region"].dropna().unique()),
-#             multi=True,
-#             options=[
-#                 {"label": region, "value": region}
-#                 for region in list(ob["region"].dropna().unique())
-#             ],
-#         ),
-#         dcc.Dropdown(
-#             id="input_regressor",
-#             value="smoke",
-#             multi=False,
-#             options=[
-#                 {"label": "Smoking Rate", "value": "smoke"},
-#                 {"label": "Primary Education Completion Rate", "value": "primedu"},
-#                 {"label": "Unemployment Rate", "value": "unemployed"},
-#             ],
-#         ),
-#         dcc.Dropdown(
-#             id="input_income",
-#             value=list(ob["income"].dropna().unique()),
-#             multi=True,
-#             options=[
-#                 {"label": income, "value": income}
-#                 for income in list(ob["income"].dropna().unique())
-#             ],
-#         ),
-#         dcc.Dropdown(
-#             id="input_highlight_country",
-#             value="Canada",
-#             multi=True,
-#             searchable=True,
-#             options=[
-#                 {"label": country, "value": country}
-#                 for country in list(ob["country"].unique())
-#             ],
-#         ),
-#         dcc.RangeSlider(
-#             id="input_year_range",
-#             value=[1975, 2016],
-#             min=1975,
-#             max=2016,
-#             step=1,
-#             marks={
-#                 i: "{}".format(i) if i == 1 else str(i) for i in range(1975, 2017, 5)
-#             },
-#         ),
-#         html.P(id="qs_bar"),
-#         html.P(id="qs_ts"),
-#     ]
-# )
+# CSS Styles
+css_dd = {
+    "font-size": "smaller",
+}
 
 app.layout = dbc.Container(
     [
@@ -145,6 +44,7 @@ app.layout = dbc.Container(
                 dbc.Col(
                     [
                         html.Br(),
+                        html.Label("Sex: "),
                         dcc.RadioItems(
                             id="input_sex",
                             options=[
@@ -152,6 +52,7 @@ app.layout = dbc.Container(
                                 for sex in ["Male", "Female", "Both"]
                             ],
                             value="Both",
+                            style=css_dd,
                             labelStyle={"display": "inline-block"},
                         ),
                         html.Br(),
@@ -173,6 +74,7 @@ app.layout = dbc.Container(
                                     value=list(ob["region"].dropna().unique()),
                                     multi=True,
                                     clearable=False,
+                                    style=css_dd,
                                     options=[
                                         {"label": region, "value": region}
                                         for region in list(
@@ -188,6 +90,7 @@ app.layout = dbc.Container(
                             value=list(ob["income"].dropna().unique()),
                             multi=True,
                             clearable=False,
+                            style=css_dd,
                             options=[
                                 {"label": income, "value": income}
                                 for income in list(ob["income"].dropna().unique())
@@ -198,6 +101,7 @@ app.layout = dbc.Container(
                             id="input_regressor",
                             value="smoke",
                             multi=False,
+                            style=css_dd,
                             options=[
                                 {"label": "Smoking Rate", "value": "smoke"},
                                 {
@@ -213,6 +117,7 @@ app.layout = dbc.Container(
                             value="Canada",
                             multi=True,
                             searchable=True,
+                            style=css_dd,
                             options=[
                                 {"label": country, "value": country}
                                 for country in list(ob["country"].unique())
@@ -232,6 +137,11 @@ app.layout = dbc.Container(
                         ),
                     ],
                     md=4,
+                    style={
+                        "border": "1px solid #d3d3d3",
+                        "border-radius": "10px",
+                        "background-color": "rgba(220, 220, 220, 0.5)",
+                    },
                 ),
                 dbc.Col(
                     [
