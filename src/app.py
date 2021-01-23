@@ -189,20 +189,25 @@ app.layout = dbc.Container(
 
 
 # Bar plot
-# @app.callback(Output("bar", "srcDoc"), Input("qs_bar", "children"))
-def plot_bar(query_string):
+def plot_bar(query_string, year):
+
+    title_label = "Top 20 Countries"
+    sub_label = str(year)
+
     n = 10
     temp = he.make_rate_data(["country"], ["obese"], query_string)
     ob_sorted = temp.sort_values("obese", ascending=False).head(n).reset_index()
     chart = (
-        alt.Chart(ob_sorted)
+        alt.Chart(
+            ob_sorted, title=alt.TitleParams(text=title_label, subtitle=sub_label)
+        )
         .mark_bar()
         .encode(
             x=alt.X(
                 "obese",
                 type="quantitative",
                 title="Obesity Rate",
-                scale=alt.Scale(domain=[0.1, 1]),
+                scale=alt.Scale(domain=[0.1, 0.8]),
                 axis=alt.Axis(format="%", grid=False),
             ),
             y=alt.Y("country", sort="x", title=""),
@@ -301,7 +306,7 @@ def plot_time(query_string, highlight_country, year_range):
             ),
             tooltip="country",
         )
-        .properties(width=400, height=300)
+        .properties(width=450, height=300)
         .interactive()
         # .add_selection(click)
     )
@@ -324,12 +329,23 @@ def plot_factor(regressor, grouper, query_string):
         alt.Chart(temp)
         .mark_circle(opacity=0.25)
         .encode(
-            x=alt.X(regressor, type="quantitative", title=label_dict[regressor]),
-            y=alt.Y("obese", title="Obesity Rate"),
+            x=alt.X(
+                regressor,
+                type="quantitative",
+                title=label_dict[regressor],
+                axis=alt.Axis(format="%", grid=False),
+            ),
+            y=alt.Y(
+                "obese", title="Obesity Rate", axis=alt.Axis(format="%", grid=False)
+            ),
             color=alt.Color(grouper, type="nominal", title="Legend"),
-            tooltip=alt.Tooltip(grouper, type="nominal"),
+            tooltip=[
+                alt.Tooltip("country:N", title="Country"),
+                alt.Tooltip(grouper, title="Grouping Variable"),
+                alt.Tooltip("obese:Q", format=".1%", title="Obesity Rate"),
+            ],
         )
-        .properties(width=400, height=150)
+        .properties(width=450, height=150)
         .interactive()
     )
 
@@ -358,13 +374,13 @@ def plot_all(
     query_string_ts = he.gen_query_string(year_range, sex, region, income)
 
     # Create plots
-    bar_plot = plot_bar(query_string_bar)
+    bar_plot = plot_bar(query_string_bar, year)
     world_plot = plot_map(query_string_bar)
     ts_plot = plot_time(query_string_ts, highlight_country, year_range)
     factor_plot = plot_factor(regressor, grouper, query_string_bar)
 
     # Combine plots
-    combo_plot = (ts_plot & factor_plot) | (world_plot & bar_plot)
+    combo_plot = (ts_plot & factor_plot) & (world_plot & bar_plot)
 
     return combo_plot.to_html()
 
