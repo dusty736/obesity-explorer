@@ -26,7 +26,6 @@ cy_ids = pd.read_csv("data/country-ids.csv").rename(columns={"world_bank": "coun
 geojson = alt.topo_feature(data.world_110m.url, "countries")
 
 # Instantiate the app
-# app = dash.Dash(__name__)
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 server = app.server
@@ -222,9 +221,23 @@ app.layout = dbc.Container(
     ]
 )
 
-
 # Bar plot
 def plot_bar(query_string, year):
+    """Function to create an altair bar plot of the top 10 countries
+
+    Function to create an altair chart of the top 10 countries
+    ordered based on obesity rate and disaggregated as per the
+    user inputs received through the app dropdown filters.
+
+    Args:
+        query_string ([str]): string containing the attributes to be used in a pandas query
+                               for filtering the data for the bar plot
+
+        year ([float]): year
+
+    Returns:
+        [altair chart]: An altair bar plot of the top 10 countries
+    """
 
     n = 10
 
@@ -259,6 +272,18 @@ def plot_bar(query_string, year):
 
 # Map plot
 def plot_map(query_string, year):
+
+    """Fuction to create an altair chloropleth world map plot showing the global obesity rates
+
+    Args:
+        query_string ([str]): string containing the attributes to be used in a pandas query
+                               for filtering the data for the bar plot
+
+        year ([float]): year
+
+    Returns:
+        [altair chart]: An altair chloropleth world map plot showing the global obesity rates
+    """
 
     title_label = "Obesity Rates"
     sub_label = str(year)
@@ -300,6 +325,23 @@ def plot_map(query_string, year):
 
 # Time Series plot
 def plot_time(query_string, highlight_country, year_range):
+
+    """Function to create a time series plot showing the country-wise global obesity rates
+
+    Function to create a time series(spaghetti) plot showing the global obesity rates
+    for all the countries for a range of years as selected by the user
+
+    Args:
+        query_string ([str]): string containing the attributes to be used in a pandas query
+                               for filtering the data for the bar plot
+
+        highlight_country ([str]): name of the country to be highlighted in the time series plot
+
+        year_range ([float]): range of years to be selected for the time series plot
+
+    Returns:
+        [altair chart]: An altair time series plot showing the country-wise global obesity rates
+    """
 
     # Filter data
     ob_yr = he.make_rate_data(["country", "year"], ["obese"], query_string)
@@ -387,6 +429,24 @@ def plot_time(query_string, highlight_country, year_range):
 # Scatter plot
 def plot_factor(regressor, grouper, query_string):
 
+    """Function to create a scatter plot showing the association of obesity rate vs other factors
+
+    Function to create a scatter plot showing the association of obesity rate
+    vs other factors and grouped by different aggregators as selected by the user
+    through the different dropdown filters.
+
+    Args:
+        regressor ([str]): the regressor to be used in the scatter plot
+
+        grouper ([str]): the attribute to be used for grouping the data in the scatter plot
+
+        query_string ([str]): string containing the attributes to be used in a pandas query
+                               for filtering the data for the bar plot
+
+    Returns:
+        [altair chart]: An altair scatter plot showing the association of obesity rate vs other factors
+    """
+
     label_dict = {
         "primedu": "Primary Education Completion Rate",
         "smoke": "Smoking Rate",
@@ -446,6 +506,29 @@ def plot_factor(regressor, grouper, query_string):
 def plot_all(
     year, year_range, sex, region, highlight_country, income, regressor, grouper
 ):
+
+    """Function to combine all the different plots generated for the dashboard
+
+    Args:
+        year ([int]): year
+
+        year_range ([list]): range of years to be selected for the time series plot
+
+        sex ([list]): sex
+
+        region ([list]): region
+
+        highlight_country ([list]): name of the country to be highlighted in the time series plot
+
+        income ([list]): income atribute in the data
+
+        regressor ([str]): the regressor to be used in the scatter plot
+
+        grouper ([str]): the attribute to be used for grouping the data in the scatter plot
+
+    Returns:
+        [altair chart]: An altair combination plot showing 4 charts: bar plot, chloropleth, time series, and scatter plot
+    """
     # Create query strings
     query_string_bar = he.gen_query_string(year, sex, region, income)
     query_string_ts = he.gen_query_string(year_range, sex, region, income)
