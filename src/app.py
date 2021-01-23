@@ -246,6 +246,15 @@ app.layout = dbc.Container(
                                         "height": "750px",
                                     },
                                 ),
+                                html.Iframe(
+                                    id="time",
+                                    srcDoc=None,
+                                    style={
+                                        "border-width": "0",
+                                        "width": "100%",
+                                        "height": "400px",
+                                    },
+                                ),
                             ],
                         )
                     ]
@@ -308,8 +317,67 @@ def plot_map(query_string):
     return world
 
 
-def plot_time():
-    pass
+def plot_time(query_string, highlight_country, year_range):
+
+    # Filter data
+    ob_yr = he.make_rate_data(["country", "year"], ["obese"], query_string)
+
+    # Create labels
+    # title_label = highlight_country + " and Obesity"
+    title_label = "World Obesity"
+    sub_label = str(year_range[0]) + "-" + str(year_range[1])
+
+    # Add click object
+    # click = alt.selection_multi()
+
+    # Format country
+    highlight_country = (
+        [highlight_country] if type(highlight_country) == str else highlight_country
+    )
+
+    # Create chart
+    alt.renderers.set_embed_options(
+        padding={"left": 0, "right": 0, "bottom": 0, "top": 0}
+    )
+
+    country_time_chart = (
+        alt.Chart(ob_yr, title=alt.TitleParams(text=title_label, subtitle=sub_label))
+        .mark_line()
+        .encode(
+            x=alt.X(
+                "year:O",
+                scale=alt.Scale(zero=False),
+                title="Years",
+                axis=alt.Axis(grid=False),
+            ),
+            y=alt.Y(
+                "obese:Q",
+                title="Obesity Rate",
+                axis=alt.Axis(format="%"),
+            ),
+            color=alt.condition(
+                alt.Predicate(
+                    alt.FieldOneOfPredicate(field="country", oneOf=highlight_country)
+                ),
+                "country",
+                alt.value("lightgray"),
+                legend=None,
+            ),
+            opacity=alt.condition(
+                alt.Predicate(
+                    alt.FieldOneOfPredicate(field="country", oneOf=highlight_country)
+                ),
+                alt.value(1),
+                alt.value(0.2),
+            ),
+            tooltip="country",
+        )
+        .properties(width=400, height=300)
+        .interactive()
+        # .add_selection(click)
+    )
+
+    return country_time_chart
 
 
 def plot_factor():
@@ -322,21 +390,22 @@ def plot_factor():
     Input("input_year_range", "value"),
     Input("input_sex", "value"),
     Input("input_region", "value"),
+    Input("input_highlight_country", "value"),
     Input("input_income", "value"),
 )
-def plot_all(year, year_range, sex, region, income):
+def plot_all(year, year_range, sex, region, highlight_country, income):
     # Create query strings
     query_string_bar = he.gen_query_string(year, sex, region, income)
-    # query_string_ts = he.gen_query_string(year_range, sex, region, income)
+    query_string_ts = he.gen_query_string(year_range, sex, region, income)
 
     # Create plots
     bar_plot = plot_bar(query_string_bar)
     world_plot = plot_map(query_string_bar)
-    # ts_plot = plot_time(query_string_ts)
+    ts_plot = plot_time(query_string_ts, highlight_country, year_range)
     # factor_plot = plot_factor(query_string_bar)
 
     # Combine plots
-    combo_plot = world_plot & bar_plot
+    combo_plot = ts_plot | (world_plot & bar_plot)
 
     return combo_plot.to_html()
 
