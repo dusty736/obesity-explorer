@@ -32,26 +32,26 @@ app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 
 
-@app.callback(
-    Output("qs_ts", "children"),
-    Input("input_year_range", "value"),
-    Input("input_sex", "value"),
-    Input("input_region", "value"),
-    Input("input_income", "value"),
-)
-def gen_qs_ts(year, sex, region, income):
-    return he.gen_query_string(year, sex, region, income)
+# @app.callback(
+#     Output("qs_ts", "children"),
+#     Input("input_year_range", "value"),
+#     Input("input_sex", "value"),
+#     Input("input_region", "value"),
+#     Input("input_income", "value"),
+# )
+# def gen_qs_ts(year, sex, region, income):
+#     return he.gen_query_string(year, sex, region, income)
 
 
-@app.callback(
-    Output("qs_bar", "children"),
-    Input("input_year", "value"),
-    Input("input_sex", "value"),
-    Input("input_region", "value"),
-    Input("input_income", "value"),
-)
-def gen_qs_bar(year, sex, region, income):
-    return he.gen_query_string(year, sex, region, income)
+# @app.callback(
+#     Output("qs_bar", "children"),
+#     Input("input_year", "value"),
+#     Input("input_sex", "value"),
+#     Input("input_region", "value"),
+#     Input("input_income", "value"),
+# )
+# def gen_qs_bar(year, sex, region, income):
+#     return he.gen_query_string(year, sex, region, income)
 
 
 # app.layout = html.Div(
@@ -144,15 +144,7 @@ app.layout = dbc.Container(
             [
                 dbc.Col(
                     [
-                        dcc.Slider(
-                            id="input_year",
-                            value=2016,
-                            min=1975,
-                            max=2016,
-                            step=5,
-                            included=False,
-                            marks={i: f"{str(i)}" for i in range(1975, 2017, 5)},
-                        ),
+                        html.Br(),
                         dcc.RadioItems(
                             id="input_sex",
                             options=[
@@ -162,15 +154,46 @@ app.layout = dbc.Container(
                             value="Both",
                             labelStyle={"display": "inline-block"},
                         ),
+                        html.Br(),
+                        dcc.Slider(
+                            id="input_year",
+                            value=2016,
+                            min=1975,
+                            max=2016,
+                            step=5,
+                            included=False,
+                            marks={i: f"{str(i)}" for i in range(1975, 2017, 5)},
+                        ),
+                        html.Br(),
+                        html.Label(
+                            [
+                                "Region",
+                                dcc.Dropdown(
+                                    id="input_region",
+                                    value=list(ob["region"].dropna().unique()),
+                                    multi=True,
+                                    clearable=False,
+                                    options=[
+                                        {"label": region, "value": region}
+                                        for region in list(
+                                            ob["region"].dropna().unique()
+                                        )
+                                    ],
+                                ),
+                            ]
+                        ),
+                        html.Br(),
                         dcc.Dropdown(
-                            id="input_region",
-                            value=list(ob["region"].dropna().unique()),
+                            id="input_income",
+                            value=list(ob["income"].dropna().unique()),
                             multi=True,
+                            clearable=False,
                             options=[
-                                {"label": region, "value": region}
-                                for region in list(ob["region"].dropna().unique())
+                                {"label": income, "value": income}
+                                for income in list(ob["income"].dropna().unique())
                             ],
                         ),
+                        html.Br(),
                         dcc.Dropdown(
                             id="input_regressor",
                             value="smoke",
@@ -184,15 +207,7 @@ app.layout = dbc.Container(
                                 {"label": "Unemployment Rate", "value": "unemployed"},
                             ],
                         ),
-                        dcc.Dropdown(
-                            id="input_income",
-                            value=list(ob["income"].dropna().unique()),
-                            multi=True,
-                            options=[
-                                {"label": income, "value": income}
-                                for income in list(ob["income"].dropna().unique())
-                            ],
-                        ),
+                        html.Br(),
                         dcc.Dropdown(
                             id="input_highlight_country",
                             value="Canada",
@@ -203,6 +218,7 @@ app.layout = dbc.Container(
                                 for country in list(ob["country"].unique())
                             ],
                         ),
+                        html.Br(),
                         dcc.RangeSlider(
                             id="input_year_range",
                             value=[1975, 2016],
@@ -222,21 +238,12 @@ app.layout = dbc.Container(
                         dbc.Row(
                             [
                                 html.Iframe(
-                                    id="bar",
+                                    id="combo_plot",
                                     srcDoc=None,
                                     style={
                                         "border-width": "0",
                                         "width": "100%",
-                                        "height": "500px",
-                                    },
-                                ),
-                                html.Iframe(
-                                    id="plt_map",
-                                    srcDoc=None,
-                                    style={
-                                        "border-width": "0",
-                                        "width": "100%",
-                                        "height": "500px",
+                                        "height": "750px",
                                     },
                                 ),
                             ],
@@ -245,17 +252,14 @@ app.layout = dbc.Container(
                 ),
             ],
         ),
-        dbc.Row(
-            [html.P(id="qs_bar"), html.P(id="qs_ts")],
-        ),
     ]
 )
 
 
 # Bar plot
-@app.callback(Output("bar", "srcDoc"), Input("qs_bar", "children"))
+# @app.callback(Output("bar", "srcDoc"), Input("qs_bar", "children"))
 def plot_bar(query_string):
-    n = 20
+    n = 10
     temp = he.make_rate_data(["country"], ["obese"], query_string)
     ob_sorted = temp.sort_values("obese", ascending=False).head(n).reset_index()
     chart = (
@@ -267,12 +271,13 @@ def plot_bar(query_string):
             color="obese",
             tooltip="obese",
         )
+        .properties(width=450, height=150)
         .interactive()
     )
-    return chart.to_html()
+    return chart
 
 
-@app.callback(Output("plt_map", "srcDoc"), Input("qs_bar", "children"))
+# @app.callback(Output("plt_map", "srcDoc"), Input("qs_bar", "children"))
 def plot_map(query_string):
     df = (
         he.make_rate_data(["country"], ["obese"], query_string)
@@ -298,9 +303,9 @@ def plot_map(query_string):
             )
         )
         .project("naturalEarth1")
-        .properties(width=900, height=600)
+        .properties(width=450, height=300)
     )
-    return world.to_html()
+    return world
 
 
 def plot_time():
@@ -309,6 +314,31 @@ def plot_time():
 
 def plot_factor():
     pass
+
+
+@app.callback(
+    Output("combo_plot", "srcDoc"),
+    Input("input_year", "value"),
+    Input("input_year_range", "value"),
+    Input("input_sex", "value"),
+    Input("input_region", "value"),
+    Input("input_income", "value"),
+)
+def plot_all(year, year_range, sex, region, income):
+    # Create query strings
+    query_string_bar = he.gen_query_string(year, sex, region, income)
+    # query_string_ts = he.gen_query_string(year_range, sex, region, income)
+
+    # Create plots
+    bar_plot = plot_bar(query_string_bar)
+    world_plot = plot_map(query_string_bar)
+    # ts_plot = plot_time(query_string_ts)
+    # factor_plot = plot_factor(query_string_bar)
+
+    # Combine plots
+    combo_plot = world_plot & bar_plot
+
+    return combo_plot.to_html()
 
 
 if __name__ == "__main__":
