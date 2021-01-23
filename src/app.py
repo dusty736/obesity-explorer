@@ -44,7 +44,7 @@ app.layout = dbc.Container(
                 dbc.Col(
                     [
                         html.Br(),
-                        html.Label("Sex: "),
+                        html.Label("Select Sex: "),
                         dcc.RadioItems(
                             id="input_sex",
                             options=[
@@ -54,21 +54,23 @@ app.layout = dbc.Container(
                             value="Both",
                             style=css_dd,
                             labelStyle={"display": "inline-block"},
+                            inputStyle={"margin-left": "20px"},
                         ),
                         html.Br(),
+                        html.Label("Select Year: "),
                         dcc.Slider(
                             id="input_year",
                             value=2016,
                             min=1975,
                             max=2016,
-                            step=5,
+                            step=1,
                             included=False,
                             marks={i: f"{str(i)}" for i in range(1975, 2017, 5)},
                         ),
                         html.Br(),
                         html.Label(
                             [
-                                "Region",
+                                "Select Region:",
                                 dcc.Dropdown(
                                     id="input_region",
                                     value=list(ob["region"].dropna().unique()),
@@ -85,6 +87,7 @@ app.layout = dbc.Container(
                             ]
                         ),
                         html.Br(),
+                        html.Label("Choose Income Group: "),
                         dcc.Dropdown(
                             id="input_income",
                             value=list(ob["income"].dropna().unique()),
@@ -97,6 +100,7 @@ app.layout = dbc.Container(
                             ],
                         ),
                         html.Br(),
+                        html.Label("Select Secondary Variable: "),
                         dcc.Dropdown(
                             id="input_regressor",
                             value="smoke",
@@ -112,6 +116,7 @@ app.layout = dbc.Container(
                             ],
                         ),
                         html.Br(),
+                        html.Label("Select Grouping Variable: "),
                         dcc.Dropdown(
                             id="input_grouper",
                             value="none",
@@ -125,6 +130,7 @@ app.layout = dbc.Container(
                             ],
                         ),
                         html.Br(),
+                        html.Label("Highlight Countries: "),
                         dcc.Dropdown(
                             id="input_highlight_country",
                             value="Canada",
@@ -137,6 +143,7 @@ app.layout = dbc.Container(
                             ],
                         ),
                         html.Br(),
+                        html.Label("Select Year Range: "),
                         dcc.RangeSlider(
                             id="input_year_range",
                             value=[1975, 2016],
@@ -166,16 +173,7 @@ app.layout = dbc.Container(
                                     style={
                                         "border-width": "0",
                                         "width": "100%",
-                                        "height": "750px",
-                                    },
-                                ),
-                                html.Iframe(
-                                    id="time",
-                                    srcDoc=None,
-                                    style={
-                                        "border-width": "0",
-                                        "width": "100%",
-                                        "height": "400px",
+                                        "height": "1250px",
                                     },
                                 ),
                             ],
@@ -210,7 +208,7 @@ def plot_bar(query_string, year):
                 scale=alt.Scale(domain=[0.1, 0.8]),
                 axis=alt.Axis(format="%", grid=False),
             ),
-            y=alt.Y("country", sort="x", title=""),
+            y=alt.Y("country", sort="-x", title=""),
             color="obese",
             tooltip=alt.Tooltip("obese:Q", format=".1%", title="Obesity Rate"),
         )
@@ -220,8 +218,12 @@ def plot_bar(query_string, year):
     return chart
 
 
-# @app.callback(Output("plt_map", "srcDoc"), Input("qs_bar", "children"))
-def plot_map(query_string):
+# Map plot
+def plot_map(query_string, year):
+
+    title_label = "Obesity Rates"
+    sub_label = str(year)
+
     df = (
         he.make_rate_data(["country"], ["obese"], query_string)
         .merge(cy_ids, "right", on="country")
@@ -229,15 +231,21 @@ def plot_map(query_string):
     )
     world = (
         (
-            alt.Chart(geojson)
+            alt.Chart(
+                geojson, title=alt.TitleParams(text=title_label, subtitle=sub_label)
+            )
             .mark_geoshape()
             .transform_lookup(
                 lookup="id",
                 from_=alt.LookupData(df, "id", ["country", "obese"]),
             )
             .encode(
-                color=alt.Color("obese:Q", scale=alt.Scale(scheme="viridis")),
-                # opacity=alt.condition(map_click, alt.value(1), alt.value(0.2)),
+                color=alt.Color(
+                    "obese:Q",
+                    scale=alt.Scale(scheme="viridis"),
+                    title="Obesity",
+                    legend=alt.Legend(format=".0%"),
+                ),
                 stroke=alt.value("black"),
                 tooltip=[
                     alt.Tooltip("country:N", title="Country"),
@@ -251,18 +259,15 @@ def plot_map(query_string):
     return world
 
 
+# Time Series plot
 def plot_time(query_string, highlight_country, year_range):
 
     # Filter data
     ob_yr = he.make_rate_data(["country", "year"], ["obese"], query_string)
 
     # Create labels
-    # title_label = highlight_country + " and Obesity"
     title_label = "World Obesity"
     sub_label = str(year_range[0]) + "-" + str(year_range[1])
-
-    # Add click object
-    # click = alt.selection_multi()
 
     # Format country
     highlight_country = (
@@ -308,25 +313,32 @@ def plot_time(query_string, highlight_country, year_range):
         )
         .properties(width=450, height=300)
         .interactive()
-        # .add_selection(click)
     )
 
     return country_time_chart
 
 
+# Scatter plot
 def plot_factor(regressor, grouper, query_string):
-    temp = he.make_rate_data(
-        ["country", grouper], ["primedu", "smoke", "unemployed", "obese"], query_string
-    )
 
     label_dict = {
         "primedu": "Primary Education Completion Rate",
         "smoke": "Smoking Rate",
         "unemployed": "Unemployment Rate",
+        "income": "Income Group",
+        "sex": "Sex",
+        "region": "Region",
     }
 
+    title_label = "Obesity Rate vs " + label_dict[regressor]
+    sub_label = "" if grouper == "none" else "by " + label_dict[grouper]
+
+    temp = he.make_rate_data(
+        ["country", grouper], ["primedu", "smoke", "unemployed", "obese"], query_string
+    )
+
     chart = (
-        alt.Chart(temp)
+        alt.Chart(temp, title=alt.TitleParams(text=title_label, subtitle=sub_label))
         .mark_circle(opacity=0.25)
         .encode(
             x=alt.X(
@@ -350,7 +362,6 @@ def plot_factor(regressor, grouper, query_string):
     )
 
     factor_chart = chart
-    # + chart.transform_loess(regressor, "obese", groupby=[grouper], bandwidth=0.8).mark_line(size=3)
 
     return factor_chart
 
@@ -375,7 +386,7 @@ def plot_all(
 
     # Create plots
     bar_plot = plot_bar(query_string_bar, year)
-    world_plot = plot_map(query_string_bar)
+    world_plot = plot_map(query_string_bar, year)
     ts_plot = plot_time(query_string_ts, highlight_country, year_range)
     factor_plot = plot_factor(regressor, grouper, query_string_bar)
 
