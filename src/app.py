@@ -198,10 +198,16 @@ def plot_bar(query_string):
         alt.Chart(ob_sorted)
         .mark_bar()
         .encode(
-            x=alt.X("obese", type="quantitative", title="Obesity Rate"),
-            y=alt.Y("country", sort="x", title="Country"),
+            x=alt.X(
+                "obese",
+                type="quantitative",
+                title="Obesity Rate",
+                scale=alt.Scale(domain=[0.1, 1]),
+                axis=alt.Axis(format="%", grid=False),
+            ),
+            y=alt.Y("country", sort="x", title=""),
             color="obese",
-            tooltip="obese",
+            tooltip=alt.Tooltip("obese:Q", format=".1%", title="Obesity Rate"),
         )
         .properties(width=450, height=150)
         .interactive()
