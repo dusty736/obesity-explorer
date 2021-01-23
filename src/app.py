@@ -2,6 +2,7 @@
 import dash
 import dash_html_components as html
 import dash_core_components as dcc
+import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 import altair as alt
 import numpy as np
@@ -25,7 +26,8 @@ cy_ids = pd.read_csv("data/country-ids.csv").rename(columns={"world_bank": "coun
 geojson = alt.topo_feature(data.world_110m.url, "countries")
 
 # Instantiate the app
-app = dash.Dash(__name__)
+# app = dash.Dash(__name__)
+app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 server = app.server
 
@@ -52,86 +54,200 @@ def gen_qs_bar(year, sex, region, income):
     return he.gen_query_string(year, sex, region, income)
 
 
-app.layout = html.Div(
+# app.layout = html.Div(
+#     [
+#         html.H1("Top Countries"),
+#         html.Iframe(
+#             id="bar",
+#             srcDoc=None,
+#             style={"border-width": "0", "width": "100%", "height": "500px"},
+#         ),
+#         html.Iframe(
+#             id="plt_map",
+#             srcDoc=None,
+#             style={"border-width": "0", "width": "100%", "height": "500px"},
+#         ),
+#         dcc.Slider(
+#             id="input_year",
+#             value=2016,
+#             min=1975,
+#             max=2016,
+#             step=5,
+#             included=False,
+#             marks={i: f"{str(i)}" for i in range(1975, 2017, 5)},
+#         ),
+#         dcc.RadioItems(
+#             id="input_sex",
+#             options=[
+#                 {"label": sex, "value": sex} for sex in ["Male", "Female", "Both"]
+#             ],
+#             value="Both",
+#             labelStyle={"display": "inline-block"},
+#         ),
+#         dcc.Dropdown(
+#             id="input_region",
+#             value=list(ob["region"].dropna().unique()),
+#             multi=True,
+#             options=[
+#                 {"label": region, "value": region}
+#                 for region in list(ob["region"].dropna().unique())
+#             ],
+#         ),
+#         dcc.Dropdown(
+#             id="input_regressor",
+#             value="smoke",
+#             multi=False,
+#             options=[
+#                 {"label": "Smoking Rate", "value": "smoke"},
+#                 {"label": "Primary Education Completion Rate", "value": "primedu"},
+#                 {"label": "Unemployment Rate", "value": "unemployed"},
+#             ],
+#         ),
+#         dcc.Dropdown(
+#             id="input_income",
+#             value=list(ob["income"].dropna().unique()),
+#             multi=True,
+#             options=[
+#                 {"label": income, "value": income}
+#                 for income in list(ob["income"].dropna().unique())
+#             ],
+#         ),
+#         dcc.Dropdown(
+#             id="input_highlight_country",
+#             value="Canada",
+#             multi=True,
+#             searchable=True,
+#             options=[
+#                 {"label": country, "value": country}
+#                 for country in list(ob["country"].unique())
+#             ],
+#         ),
+#         dcc.RangeSlider(
+#             id="input_year_range",
+#             value=[1975, 2016],
+#             min=1975,
+#             max=2016,
+#             step=1,
+#             marks={
+#                 i: "{}".format(i) if i == 1 else str(i) for i in range(1975, 2017, 5)
+#             },
+#         ),
+#         html.P(id="qs_bar"),
+#         html.P(id="qs_ts"),
+#     ]
+# )
+
+app.layout = dbc.Container(
     [
-        html.H1("Top Countries"),
-        html.Iframe(
-            id="bar",
-            srcDoc=None,
-            style={"border-width": "0", "width": "100%", "height": "500px"},
-        ),
-        html.Iframe(
-            id="plt_map",
-            srcDoc=None,
-            style={"border-width": "0", "width": "100%", "height": "500px"},
-        ),
-        dcc.Slider(
-            id="input_year",
-            value=2016,
-            min=1975,
-            max=2016,
-            step=5,
-            included=False,
-            marks={i: f"{str(i)}" for i in range(1975, 2017, 5)},
-        ),
-        dcc.RadioItems(
-            id="input_sex",
-            options=[
-                {"label": sex, "value": sex} for sex in ["Male", "Female", "Both"]
+        html.H1("Obesity Dashboard"),
+        dbc.Row(
+            [
+                dbc.Col(
+                    [
+                        dcc.Slider(
+                            id="input_year",
+                            value=2016,
+                            min=1975,
+                            max=2016,
+                            step=5,
+                            included=False,
+                            marks={i: f"{str(i)}" for i in range(1975, 2017, 5)},
+                        ),
+                        dcc.RadioItems(
+                            id="input_sex",
+                            options=[
+                                {"label": sex, "value": sex}
+                                for sex in ["Male", "Female", "Both"]
+                            ],
+                            value="Both",
+                            labelStyle={"display": "inline-block"},
+                        ),
+                        dcc.Dropdown(
+                            id="input_region",
+                            value=list(ob["region"].dropna().unique()),
+                            multi=True,
+                            options=[
+                                {"label": region, "value": region}
+                                for region in list(ob["region"].dropna().unique())
+                            ],
+                        ),
+                        dcc.Dropdown(
+                            id="input_regressor",
+                            value="smoke",
+                            multi=False,
+                            options=[
+                                {"label": "Smoking Rate", "value": "smoke"},
+                                {
+                                    "label": "Primary Education Completion Rate",
+                                    "value": "primedu",
+                                },
+                                {"label": "Unemployment Rate", "value": "unemployed"},
+                            ],
+                        ),
+                        dcc.Dropdown(
+                            id="input_income",
+                            value=list(ob["income"].dropna().unique()),
+                            multi=True,
+                            options=[
+                                {"label": income, "value": income}
+                                for income in list(ob["income"].dropna().unique())
+                            ],
+                        ),
+                        dcc.Dropdown(
+                            id="input_highlight_country",
+                            value="Canada",
+                            multi=True,
+                            searchable=True,
+                            options=[
+                                {"label": country, "value": country}
+                                for country in list(ob["country"].unique())
+                            ],
+                        ),
+                        dcc.RangeSlider(
+                            id="input_year_range",
+                            value=[1975, 2016],
+                            min=1975,
+                            max=2016,
+                            step=1,
+                            marks={
+                                i: "{}".format(i) if i == 1 else str(i)
+                                for i in range(1975, 2017, 5)
+                            },
+                        ),
+                    ],
+                    md=4,
+                ),
+                dbc.Col(
+                    [
+                        dbc.Row(
+                            [
+                                html.Iframe(
+                                    id="bar",
+                                    srcDoc=None,
+                                    style={
+                                        "border-width": "0",
+                                        "width": "100%",
+                                        "height": "500px",
+                                    },
+                                ),
+                                html.Iframe(
+                                    id="plt_map",
+                                    srcDoc=None,
+                                    style={
+                                        "border-width": "0",
+                                        "width": "100%",
+                                        "height": "500px",
+                                    },
+                                ),
+                            ],
+                        )
+                    ]
+                ),
             ],
-            value="Both",
-            labelStyle={"display": "inline-block"},
         ),
-        dcc.Dropdown(
-            id="input_region",
-            value=list(ob["region"].dropna().unique()),
-            multi=True,
-            options=[
-                {"label": region, "value": region}
-                for region in list(ob["region"].dropna().unique())
-            ],
+        dbc.Row(
+            [html.P(id="qs_bar"), html.P(id="qs_ts")],
         ),
-        dcc.Dropdown(
-            id="input_regressor",
-            value="smoke",
-            multi=False,
-            options=[
-                {"label": "Smoking Rate", "value": "smoke"},
-                {"label": "Primary Education Completion Rate", "value": "primedu"},
-                {"label": "Unemployment Rate", "value": "unemployed"},
-            ],
-        ),
-        dcc.Dropdown(
-            id="input_income",
-            value=list(ob["income"].dropna().unique()),
-            multi=True,
-            options=[
-                {"label": income, "value": income}
-                for income in list(ob["income"].dropna().unique())
-            ],
-        ),
-        dcc.Dropdown(
-            id="input_highlight_country",
-            value="Canada",
-            multi=True,
-            searchable=True,
-            options=[
-                {"label": country, "value": country}
-                for country in list(ob["country"].unique())
-            ],
-        ),
-        dcc.RangeSlider(
-            id="input_year_range",
-            value=[1975, 2016],
-            min=1975,
-            max=2016,
-            step=1,
-            marks={
-                i: "{}".format(i) if i == 1 else str(i) for i in range(1975, 2017, 5)
-            },
-        ),
-        html.P(id="qs_bar"),
-        html.P(id="qs_ts"),
     ]
 )
 
