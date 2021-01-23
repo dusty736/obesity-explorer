@@ -113,6 +113,19 @@ app.layout = dbc.Container(
                         ),
                         html.Br(),
                         dcc.Dropdown(
+                            id="input_grouper",
+                            value="none",
+                            multi=False,
+                            style=css_dd,
+                            options=[
+                                {"label": "Income group", "value": "income"},
+                                {"label": "Sex", "value": "sex"},
+                                {"label": "Region", "value": "region"},
+                                {"label": "No grouping", "value": "none"},
+                            ],
+                        ),
+                        html.Br(),
+                        dcc.Dropdown(
                             id="input_highlight_country",
                             value="Canada",
                             multi=True,
@@ -290,8 +303,34 @@ def plot_time(query_string, highlight_country, year_range):
     return country_time_chart
 
 
-def plot_factor():
-    pass
+def plot_factor(regressor, grouper, query_string):
+    temp = he.make_rate_data(
+        ["country", grouper], ["primedu", "smoke", "unemployed", "obese"], query_string
+    )
+
+    label_dict = {
+        "primedu": "Primary Education Completion Rate",
+        "smoke": "Smoking Rate",
+        "unemployed": "Unemployment Rate",
+    }
+
+    chart = (
+        alt.Chart(temp)
+        .mark_circle(opacity=0.25)
+        .encode(
+            x=alt.X(regressor, type="quantitative", title=label_dict[regressor]),
+            y=alt.Y("obese", title="Obesity Rate"),
+            color=alt.Color(grouper, type="nominal", title="Legend"),
+            tooltip=alt.Tooltip(grouper, type="nominal"),
+        )
+        .properties(width=400, height=150)
+        .interactive()
+    )
+
+    factor_chart = chart
+    # + chart.transform_loess(regressor, "obese", groupby=[grouper], bandwidth=0.8).mark_line(size=3)
+
+    return factor_chart
 
 
 @app.callback(
@@ -302,8 +341,12 @@ def plot_factor():
     Input("input_region", "value"),
     Input("input_highlight_country", "value"),
     Input("input_income", "value"),
+    Input("input_regressor", "value"),
+    Input("input_grouper", "value"),
 )
-def plot_all(year, year_range, sex, region, highlight_country, income):
+def plot_all(
+    year, year_range, sex, region, highlight_country, income, regressor, grouper
+):
     # Create query strings
     query_string_bar = he.gen_query_string(year, sex, region, income)
     query_string_ts = he.gen_query_string(year_range, sex, region, income)
@@ -312,10 +355,10 @@ def plot_all(year, year_range, sex, region, highlight_country, income):
     bar_plot = plot_bar(query_string_bar)
     world_plot = plot_map(query_string_bar)
     ts_plot = plot_time(query_string_ts, highlight_country, year_range)
-    # factor_plot = plot_factor(query_string_bar)
+    factor_plot = plot_factor(regressor, grouper, query_string_bar)
 
     # Combine plots
-    combo_plot = ts_plot | (world_plot & bar_plot)
+    combo_plot = (ts_plot & factor_plot) | (world_plot & bar_plot)
 
     return combo_plot.to_html()
 
